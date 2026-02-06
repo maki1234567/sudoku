@@ -117,6 +117,7 @@
         <div class="sidebar">
             <div id="timer">00:00</div>
             <button style="background:#27ae60; color:white;" onclick="verificarVictoria()">Verificar</button>
+            <button id="btn-pista" style="background:#9b59b6; color:white;" onclick="usarPista()">Pista</button>
             <button id="btn-pausa-toggle" style="background:#e74c3c; color:white;" onclick="togglePausa()">Pausar</button>
             <button onclick="location.reload()" style="background:#95a5a6; color:white;">REINICIAR</button>
         </div>
@@ -135,6 +136,7 @@
         let intervaloCronometro;
         let juegoIniciado = false;
         let enPausa = false;
+        let pistasRestantes = 3;
 
         function toggleTema() {
             document.body.classList.toggle('dark-mode');
@@ -179,6 +181,7 @@
 
         function generarNuevoTablero() {
             const board = document.getElementById('sudoku-board');
+            board.innerHTML = '<div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer;">TOCA PARA EMPEZAR</div>';
             solucionActual = Array.from({length: 9}, () => Array(9).fill(0));
             
             function esValido(t, f, c, n) {
@@ -211,12 +214,12 @@
                 if(visible[r][c] === 0) {
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.id = `i-${r}-${c}`; // AGREGADO PARA VERIFICACIÓN
+                    input.id = `i-${r}-${c}`;
                     input.setAttribute('autocomplete', 'off');
                     input.oninput = function() {
                         this.value = this.value.replace(/[^1-9]/g, '').slice(-1);
                         resaltarIguales(this.value);
-                        verificarAuto(); // LLAMADA AGREGADA
+                        verificarAuto();
                     };
                     cell.appendChild(input);
                 } else {
@@ -231,6 +234,27 @@
             }
         }
 
+       // LÓGICA DE PISTAS INFINITAS
+        function usarPista() {
+            if (!juegoIniciado || enPausa) return;
+            // Busca todos los inputs que estén vacíos o tengan un número incorrecto
+            const inputs = Array.from(document.querySelectorAll('input')).filter(i => {
+                let partes = i.id.split('-');
+                let r = partes[1], c = partes[2];
+                return i.value === "" || i.value != solucionActual[r][c];
+            });
+
+            if (inputs.length > 0) {
+                const iAleatorio = inputs[Math.floor(Math.random() * inputs.length)];
+                let partes = iAleatorio.id.split('-');
+                let r = partes[1], c = partes[2];
+                
+                iAleatorio.value = solucionActual[r][c];
+                iAleatorio.style.color = "#9b59b6"; // Color diferente para la pista
+                resaltarIguales(iAleatorio.value);
+                verificarAuto();
+            }
+        }
         function verificarAuto() {
             let lleno = true, ok = true;
             document.querySelectorAll('input').forEach(i => {
@@ -254,7 +278,11 @@
                 let r = partes[1], c = partes[2];
                 if(i.value == "" || i.value != solucionActual[r][c]) win = false; 
             });
-            alert(win ? "¡Lo lograste!" : "Todavía falta o hay errores.");
+            if (win) {
+                verificarAuto();
+            } else {
+                alert("Todavía falta o hay errores.");
+            }
         }
     </script>
 </body>
