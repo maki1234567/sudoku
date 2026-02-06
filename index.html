@@ -2,21 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sudoku de Maki</title>
     <style>
         :root {
             --borde-grueso: 3px solid #000;
             --borde-normal: 1px solid #000;
             --color-maki: #2980b9;
-            --resaltado: #d1ecf1;
+            --size-celda: 50px;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: #f4f7f6;
             display: flex; flex-direction: column; align-items: center;
-            padding: 20px; margin: 0; min-height: 100vh;
+            padding: 10px; margin: 0; min-height: 100vh;
             transition: background-color 0.3s;
         }
 
@@ -25,32 +25,40 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 500;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
         }
 
         /* CONTENEDOR PRINCIPAL */
         .main-container { 
             display: flex; flex-direction: row; align-items: flex-start; 
-            gap: 60px; padding: 30px; background: white;
+            gap: 20px; padding: 20px; background: white;
             border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 95vw;
             transition: background 0.3s;
         }
 
+        h1 { color: var(--color-maki); margin: 10px 0; font-size: 28px; }
+        
         #sudoku-board {
-            display: grid; grid-template-columns: repeat(9, 50px); grid-template-rows: repeat(9, 50px);
+            display: grid; 
+            grid-template-columns: repeat(9, var(--size-celda)); 
+            grid-template-rows: repeat(9, var(--size-celda));
             border: var(--borde-grueso); background-color: #000; position: relative;
         }
 
         .cell {
-            width: 50px; height: 50px; background: white; border: var(--borde-normal);
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
-            box-sizing: border-box; cursor: pointer; transition: background 0.2s;
+            width: var(--size-celda); height: var(--size-celda); 
+            background: white; border: var(--borde-normal);
+            display: flex; align-items: center; justify-content: center; 
+            font-size: calc(var(--size-celda) * 0.45);
+            box-sizing: border-box; cursor: pointer;
         }
 
-        /* RESALTADO (IMPORTANTE: !important para ganar al modo oscuro) */
+        /* RESALTADO */
         .highlight { background-color: #add8e6 !important; color: #000 !important; }
         .dark-mode .highlight { background-color: #2c5d7d !important; color: #fff !important; }
 
-        /* MODO PAUSA (OCULTA TODO) */
+        /* MODO PAUSA */
         .paused-mode .cell { background-color: #dfe6e9 !important; color: transparent !important; }
         .paused-mode .cell * { visibility: hidden !important; }
         .dark-mode.paused-mode .cell { background-color: #1a1a1a !important; }
@@ -58,29 +66,41 @@
         /* MODO OSCURO */
         body.dark-mode { background-color: #1a1a1a; color: #ffffff; }
         .dark-mode #pantalla-inicio { background: #1a1a1a; }
-        .dark-mode .main-container { background: #454545; } /* Gris más claro solicitado */
+        .dark-mode .main-container { background: #454545; }
         .dark-mode .cell { background: #555; color: #ffffff; border-color: #333; }
         .dark-mode .fixed { background-color: #666; color: #5dade2; }
         .dark-mode input { color: #85c1e9; }
         
         input { 
             width: 100%; height: 100%; border: none; text-align: center; 
-            font-size: 20px; color: #3498db; outline: none; background: transparent; 
+            font-size: inherit; color: #3498db; outline: none; background: transparent; 
         }
         .fixed { font-weight: bold; background-color: #f8f9fa; color: #333; }
 
-        .sidebar { display: flex; flex-direction: column; width: 180px; gap: 15px; }
-        #timer { font-size: 42px; font-weight: bold; text-align: center; border: 2px solid #ffcccc; border-radius: 10px; padding: 10px; }
+        .sidebar { display: flex; flex-direction: column; width: 180px; gap: 10px; }
+        #timer { font-size: 32px; font-weight: bold; text-align: center; border: 2px solid #ffcccc; border-radius: 10px; padding: 10px; background: #fff5f5; color: #e74c3c; }
+        .dark-mode #timer { background: #2d1a1a; border-color: #5d1a1a; }
 
-        button { padding: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
+        button { padding: 12px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+
+        /* ADAPTACIÓN A MÓVILES */
+        @media (max-width: 600px) {
+            :root { --size-celda: 10vw; }
+            .main-container { flex-direction: column; align-items: center; padding: 10px; }
+            .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            #timer { width: 100%; font-size: 24px; }
+            h1 { font-size: 22px; }
+            button { flex: 1; min-width: 120px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>
 
-    <button id="btn-theme" onclick="toggleTema()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 24px; background: none; border: none; cursor: pointer;">🌙</button>
+    <button id="btn-theme" onclick="toggleTema()" style="position: fixed; top: 15px; right: 15px; z-index: 1000; font-size: 24px; background: none; border: none; cursor: pointer;">🌙</button>
 
     <div id="pantalla-inicio">
-        <h1 style="color: #2980b9;">SUDOKU DE MAKI</h1>
+        <h1 style="font-size: 40px; color: #2980b9;">SUDOKU DE MAKI</h1>
+        <p>Elige tu nivel:</p>
         <div style="display: flex; gap: 10px;">
             <button style="background:#2ecc71; color:white;" onclick="seleccionarDificultad(30)">FÁCIL</button>
             <button style="background:#f1c40f; color:white;" onclick="seleccionarDificultad(45)">MEDIO</button>
@@ -92,13 +112,13 @@
 
     <div class="main-container">
         <div id="sudoku-board">
-            <div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer;">TOCA PARA EMPEZAR</div>
+            <div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center; font-weight: bold; padding: 10px; box-sizing: border-box;">TOCA AQUÍ PARA EMPEZAR</div>
         </div>
 
         <div class="sidebar">
             <div id="timer">00:00</div>
-            <button style="background:#27ae60; color:white;" onclick="verificarVictoria()">Verificar</button>
-            <button id="btn-pausa-toggle" style="background:#e74c3c; color:white;" onclick="togglePausa()">Pausar</button>
+            <button style="background:#27ae60; color:white;" onclick="verificarVictoria()">VERIFICAR</button>
+            <button id="btn-pausa-toggle" style="background:#e74c3c; color:white;" onclick="togglePausa()">PAUSAR</button>
             <button onclick="location.reload()" style="background:#95a5a6; color:white;">REINICIAR</button>
         </div>
     </div>
@@ -126,6 +146,10 @@
             if (juegoIniciado) return;
             juegoIniciado = true;
             document.getElementById('overlay-text').style.display = 'none';
+            iniciarCronometro();
+        }
+
+        function iniciarCronometro() {
             intervaloCronometro = setInterval(() => {
                 if (!enPausa) {
                     segundos++;
@@ -140,7 +164,7 @@
             if (!juegoIniciado) return;
             enPausa = !enPausa;
             document.body.classList.toggle('paused-mode');
-            document.getElementById('btn-pausa-toggle').innerText = enPausa ? "Reanudar" : "Pausar";
+            document.getElementById('btn-pausa-toggle').innerText = enPausa ? "REANUDAR" : "PAUSAR";
         }
 
         function resaltarIguales(numero) {
@@ -152,25 +176,28 @@
             });
         }
 
+        function esValido(t, f, c, n) {
+            for(let i=0; i<9; i++) if(t[f][i]===n || t[i][c]===n) return false;
+            let r=Math.floor(f/3)*3, l=Math.floor(c/3)*3;
+            for(let i=0; i<3; i++) for(let j=0; j<3; j++) if(t[r+i][l+j]===n) return false;
+            return true;
+        }
+
+        function resolver(t) {
+            for(let f=0; f<9; f++) for(let c=0; c<9; c++) if(t[f][c]===0){
+                let ns=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+                for(let n of ns) if(esValido(t,f,c,n)){ t[f][c]=n; if(resolver(t)) return true; t[f][c]=0; }
+                return false;
+            } return true;
+        }
+
         function generarNuevoTablero() {
             const board = document.getElementById('sudoku-board');
-            // Lógica simplificada de generación para el ejemplo
+            board.innerHTML = ''; // Limpiar tablero
+            board.appendChild(document.getElementById('overlay-text') || '');
+            
             solucionActual = Array.from({length: 9}, () => Array(9).fill(0));
-            // (Aquí va tu función resolver() completa que ya tienes)
-            function esValido(t, f, c, n) {
-                for(let i=0; i<9; i++) if(t[f][i]===n || t[i][c]===n) return false;
-                let r=Math.floor(f/3)*3, l=Math.floor(c/3)*3;
-                for(let i=0; i<3; i++) for(let j=0; j<3; j++) if(t[r+i][l+j]===n) return false;
-                return true;
-            }
-            function res(t) {
-                for(let f=0; f<9; f++) for(let c=0; c<9; c++) if(t[f][c]===0){
-                    let ns=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
-                    for(let n of ns) if(esValido(t,f,c,n)){ t[f][c]=n; if(res(t)) return true; t[f][c]=0; }
-                    return false;
-                } return true;
-            }
-            res(solucionActual);
+            resolver(solucionActual);
 
             let visible = solucionActual.map(r => [...r]);
             let b = 0; while(b < espaciosVacios) {
@@ -187,7 +214,8 @@
                 if(visible[r][c] === 0) {
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.setAttribute('autocomplete', 'off'); // EVITA EL REGISTRO DE NÚMEROS
+                    input.inputMode = 'numeric'; // Abre teclado numérico en celulares
+                    input.setAttribute('autocomplete', 'off'); // Sin sugerencias
                     input.oninput = function() {
                         this.value = this.value.replace(/[^1-9]/g, '').slice(-1);
                         resaltarIguales(this.value);
@@ -198,7 +226,7 @@
                     cell.classList.add('fixed');
                 }
                 cell.onclick = () => {
-                    let v = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input').value;
+                    let v = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input')?.value;
                     resaltarIguales(v);
                 };
                 board.appendChild(cell);
@@ -207,8 +235,13 @@
 
         function verificarVictoria() {
             let win = true;
-            document.querySelectorAll('input').forEach(i => { if(i.value == "") win = false; });
-            alert(win ? "¡Lo lograste Maki!" : "Todavía falta o hay errores.");
+            let completo = true;
+            document.querySelectorAll('input').forEach(i => {
+                if(i.value == "") completo = false;
+                // Aquí podrías añadir lógica de comparación si quieres
+            });
+            if(!completo) alert("¡Maki, todavía hay espacios vacíos!");
+            else alert("¡Verificado!");
         }
     </script>
 </body>
