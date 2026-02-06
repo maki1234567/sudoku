@@ -27,7 +27,7 @@
         }
         
         .contenedor-niveles {
-            display: flex; /* Pone los botones en horizontal */
+            display: flex; 
             gap: 15px;
             margin-top: 20px;
         }
@@ -37,9 +37,9 @@
         /* CONTENEDOR PRINCIPAL - TABLERO IZQUIERDA, CONTROLES DERECHA */
         .main-container { 
             display: flex; 
-            flex-direction: row; /* Alineación horizontal */
+            flex-direction: row; 
             align-items: flex-start; 
-            gap: 60px; /* Espacio grande entre sudoku y controles */
+            gap: 60px; 
             padding: 30px;
             background: white;
             border-radius: 15px;
@@ -109,14 +109,9 @@
             z-index: 100; cursor: pointer; font-size: 20px; font-weight: bold;
         }
 
-        /* Responsive para móviles */
         @media (max-width: 800px) {
             .main-container { flex-direction: column; gap: 20px; align-items: center; padding: 10px; }
-            .contenedor-niveles { flex-wrap: wrap; justify-content: center; }
-            #sudoku-board { grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); }
-            .cell { width: 38px; height: 38px; }
             .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
-            #timer { width: 100%; }
         }
     </style>
 </head>
@@ -269,12 +264,8 @@
             while (borrados < espaciosVacios && intentos < 1000) {
                 let r = Math.floor(Math.random() * 9), c = Math.floor(Math.random() * 9);
                 if (tableroVisible[r][c] !== 0) {
-                    let pF = tableroVisible[r].filter(x => x !== 0).length;
-                    let pC = tableroVisible.map(row => row[c]).filter(x => x !== 0).length;
-                    if (pF > 2 && pC > 2) {
-                        tableroVisible[r][c] = 0;
-                        borrados++;
-                    }
+                    tableroVisible[r][c] = 0;
+                    borrados++;
                 }
                 intentos++;
             }
@@ -292,7 +283,6 @@
                             resaltarIguales(this.value);
                             verificarAuto();
                         };
-                        input.onfocus = function() { resaltarIguales(this.value); };
                         cell.appendChild(input);
                     } else {
                         cell.innerText = tableroVisible[r][c];
