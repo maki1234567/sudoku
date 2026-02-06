@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku de Maki</title>
+    <style>
+        :root {
+            --borde-grueso: 3px solid #000;
+            --borde-normal: 1px solid #000;
+            --color-maki: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f7f6;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; margin: 0;
+            min-height: 100vh;
+        }
+
+        /* PANTALLA DE INICIO - NIVELES HORIZONTALES */
+        #pantalla-inicio, #modal-victoria {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 500;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        
+        .contenedor-niveles {
+            display: flex; /* Pone los botones en horizontal */
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        #modal-victoria { background: rgba(0,0,0,0.9); color: white; display: none; z-index: 600; }
+
+        /* CONTENEDOR PRINCIPAL - TABLERO IZQUIERDA, CONTROLES DERECHA */
+        .main-container { 
+            display: flex; 
+            flex-direction: row; /* Alineación horizontal */
+            align-items: flex-start; 
+            gap: 60px; /* Espacio grande entre sudoku y controles */
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 { color: var(--color-maki); margin-bottom: 30px; }
+        
+        #sudoku-board {
+            display: grid; grid-template-columns: repeat(9, 50px); grid-template-rows: repeat(9, 50px);
+            border: var(--borde-grueso); background-color: #000; position: relative;
+        }
+
+        .cell {
+            width: 50px; height: 50px; background: white; border: var(--borde-normal);
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Visibilidad en Pausa */
+        .hidden-numbers .cell, .paused-mode .cell { 
+            color: transparent !important; background-color: #dfe6e9 !important; 
+        }
+        .hidden-numbers input, .paused-mode input { opacity: 0 !important; pointer-events: none; }
+
+        /* Bordes de regiones */
+        .cell:nth-child(3n+4):not(:nth-child(9n)) { border-right: var(--borde-grueso); }
+        .row-3, .row-6 { border-bottom: var(--borde-grueso) !important; }
+
+        .highlight { background-color: #d1ecf1 !important; }
+
+        /* PANEL DE CONTROL (DERECHA) */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            width: 180px;
+            gap: 15px;
+        }
+
+        #timer {
+            font-size: 42px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            background: #fff5f5;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #ffcccc;
+        }
+
+        button { padding: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-facil { background: #2ecc71; color: white; }
+        .btn-medio { background: #f1c40f; color: white; }
+        .btn-dificil { background: #e67e22; color: white; }
+        .btn-pausa { background: #e74c3c; color: white; }
+        .btn-check { background: #27ae60; color: white; font-size: 18px; }
+        .btn-pista { background: #9b59b6; color: white; }
+
+        input { width: 100%; height: 100%; border: none; text-align: center; font-size: 20px; color: #3498db; outline: none; background: transparent; }
+        .fixed { font-weight: bold; background-color: #f8f9fa; color: #333; }
+
+        #overlay-text {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); color: white; display: flex;
+            justify-content: center; align-items: center; text-align: center;
+            z-index: 100; cursor: pointer; font-size: 20px; font-weight: bold;
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 800px) {
+            .main-container { flex-direction: column; gap: 20px; align-items: center; padding: 10px; }
+            .contenedor-niveles { flex-wrap: wrap; justify-content: center; }
+            #sudoku-board { grid-template-columns: repeat(9, 38px); grid-template-rows: repeat(9, 38px); }
+            .cell { width: 38px; height: 38px; }
+            .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            #timer { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-inicio">
+        <h1 style="font-size: 48px;">SUDOKU DE MAKI</h1>
+        <p style="font-size: 20px; color: #7f8c8d;">Selecciona el nivel de dificultad:</p>
+        <div class="contenedor-niveles">
+            <button class="btn-facil" onclick="seleccionarDificultad(30)">FÁCIL</button>
+            <button class="btn-medio" onclick="seleccionarDificultad(45)">MEDIO</button>
+            <button class="btn-dificil" onclick="seleccionarDificultad(55)">DIFÍCIL</button>
+        </div>
+    </div>
+
+    <h1>Sudoku de Maki</h1>
+
+    <div class="main-container">
+        <div id="sudoku-board" class="hidden-numbers">
+            <div id="overlay-text" onclick="empezarJuego()">TOCA AQUÍ PARA EMPEZAR<br>SUDOKU DE MAKI</div>
+        </div>
+
+        <div class="sidebar">
+            <div id="timer">00:00</div>
+            <button class="btn-check" onclick="verificarVictoria()">Verificar Todo</button>
+            <button id="btn-pista" class="btn-pista" onclick="usarPista()">Usar Pista (10)</button>
+            <button id="btn-pausa-toggle" class="btn-pausa" onclick="togglePausa()">Pausar Juego</button>
+            <hr style="width: 100%; border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <button onclick="location.reload()" style="background: #95a5a6; color: white; font-size: 11px;">REINICIAR TODO</button>
+        </div>
+    </div>
+
+    <div id="modal-victoria">
+        <h2 style="font-size: 50px; color: #2ecc71;">¡LO LOGRASTE!</h2>
+        <p style="font-size: 24px;">Completaste el Sudoku de Maki</p>
+        <p id="msg-victoria" style="font-size: 20px; color: #bdc3c7;"></p>
+        <button class="btn-facil" onclick="location.reload()" style="margin-top: 20px; padding: 20px 40px; font-size: 20px;">Jugar Otra Vez</button>
+    </div>
+
+    <script>
+        let solucionActual = [];
+        let espaciosVacios = 40;
+        let segundos = 0;
+        let intervaloCronometro;
+        let juegoIniciado = false;
+        let enPausa = false;
+        let pistasRestantes = 10;
+
+        function seleccionarDificultad(n) {
+            espaciosVacios = n;
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            generarNuevoTablero();
+        }
+
+        function empezarJuego() {
+            if (juegoIniciado) return;
+            juegoIniciado = true;
+            document.getElementById('sudoku-board').classList.remove('hidden-numbers');
+            document.getElementById('overlay-text').style.display = 'none';
+            iniciarCronometro();
+        }
+
+        function iniciarCronometro() {
+            clearInterval(intervaloCronometro);
+            intervaloCronometro = setInterval(() => {
+                if (!enPausa) {
+                    segundos++;
+                    let m = Math.floor(segundos / 60).toString().padStart(2, '0');
+                    let s = (segundos % 60).toString().padStart(2, '0');
+                    document.getElementById('timer').innerText = `${m}:${s}`;
+                }
+            }, 1000);
+        }
+
+        function togglePausa() {
+            if (!juegoIniciado) return;
+            enPausa = !enPausa;
+            const board = document.getElementById('sudoku-board');
+            const btn = document.getElementById('btn-pausa-toggle');
+            if (enPausa) {
+                board.classList.add('paused-mode');
+                btn.innerText = "Reanudar Juego";
+                btn.style.background = "#2ecc71";
+            } else {
+                board.classList.remove('paused-mode');
+                btn.innerText = "Pausar Juego";
+                btn.style.background = "#e74c3c";
+            }
+        }
+
+        function usarPista() {
+            if (!juegoIniciado || enPausa || pistasRestantes <= 0) return;
+            const inputsVacios = Array.from(document.querySelectorAll('input')).filter(i => i.value === "");
+            if (inputsVacios.length > 0) {
+                const randomInput = inputsVacios[Math.floor(Math.random() * inputsVacios.length)];
+                const [_, r, c] = randomInput.id.split('-');
+                randomInput.value = solucionActual[r][c];
+                resaltarIguales(randomInput.value);
+                pistasRestantes--;
+                document.getElementById('btn-pista').innerText = `Usar Pista (${pistasRestantes})`;
+                if (pistasRestantes === 0) document.getElementById('btn-pista').style.opacity = "0.5";
+                verificarAuto();
+            }
+        }
+
+        function resaltarIguales(numero) {
+            if (enPausa) return;
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('highlight'));
+            if (!numero) return;
+            document.querySelectorAll('.cell').forEach(cell => {
+                let valor = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input')?.value;
+                if (valor === numero) cell.classList.add('highlight');
+            });
+        }
+
+        function esValido(tablero, fila, col, num) {
+            for (let i = 0; i < 9; i++) if (tablero[fila][i] === num || tablero[i][col] === num) return false;
+            let sR = Math.floor(fila / 3) * 3, sC = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if (tablero[sR + i][sC + j] === num) return false;
+            return true;
+        }
+
+        function resolver(tab) {
+            for (let f = 0; f < 9; f++) {
+                for (let c = 0; c < 9; c++) {
+                    if (tab[f][c] === 0) {
+                        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random()-0.5);
+                        for (let n of nums) {
+                            if (esValido(tab, f, c, n)) {
+                                tab[f][c] = n;
+                                if (resolver(tab)) return true;
+                                tab[f][c] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function generarNuevoTablero() {
+            const boardElement = document.getElementById('sudoku-board');
+            boardElement.innerHTML = '<div id="overlay-text" onclick="empezarJuego()">TOCA AQUÍ PARA EMPEZAR<br>SUDOKU DE MAKI</div>';
+            solucionActual = Array.from({ length: 9 }, () => Array(9).fill(0));
+            resolver(solucionActual);
+            let tableroVisible = solucionActual.map(row => [...row]);
+            let borrados = 0;
+            let intentos = 0;
+            while (borrados < espaciosVacios && intentos < 1000) {
+                let r = Math.floor(Math.random() * 9), c = Math.floor(Math.random() * 9);
+                if (tableroVisible[r][c] !== 0) {
+                    let pF = tableroVisible[r].filter(x => x !== 0).length;
+                    let pC = tableroVisible.map(row => row[c]).filter(x => x !== 0).length;
+                    if (pF > 2 && pC > 2) {
+                        tableroVisible[r][c] = 0;
+                        borrados++;
+                    }
+                }
+                intentos++;
+            }
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (r === 2 || r === 5) cell.classList.add('row-3');
+                    if (tableroVisible[r][c] === 0) {
+                        const input = document.createElement('input');
+                        input.type = 'text'; input.id = `input-${r}-${c}`;
+                        input.oninput = function() {
+                            if(this.value.length > 1) this.value = this.value.slice(-1);
+                            if(!/[1-9]/.test(this.value)) this.value = "";
+                            resaltarIguales(this.value);
+                            verificarAuto();
+                        };
+                        input.onfocus = function() { resaltarIguales(this.value); };
+                        cell.appendChild(input);
+                    } else {
+                        cell.innerText = tableroVisible[r][c];
+                        cell.classList.add('fixed');
+                    }
+                    cell.onclick = () => {
+                        let n = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input')?.value;
+                        resaltarIguales(n);
+                    };
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function verificarAuto() {
+            let lleno = true, correcto = true;
+            document.querySelectorAll('input').forEach(i => {
+                let [_, r, c] = i.id.split('-');
+                if (i.value === "") lleno = false;
+                else if (i.value != solucionActual[r][c]) correcto = false;
+            });
+            if (lleno && correcto) {
+                clearInterval(intervaloCronometro);
+                document.getElementById('msg-victoria').innerText = `Tu tiempo final fue: ${document.getElementById('timer').innerText}`;
+                document.getElementById('modal-victoria').style.display = 'flex';
+            }
+        }
+
+        function verificarVictoria() {
+            if (enPausa) return;
+            let vacios = false;
+            document.querySelectorAll('input').forEach(i => { if(i.value === "") vacios = true; });
+            if (vacios) alert("¡Maki, todavía quedan espacios vacíos!");
+            else verificarAuto();
+        }
+    </script>
+</body>
+</html>
