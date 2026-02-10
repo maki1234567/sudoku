@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku de Maki</title>
+    <title>Sudoku de Maki Pro</title>
     <style>
         :root {
             --borde-grueso: 3px solid #000;
             --borde-normal: 1px solid #000;
             --color-maki: #2980b9;
-            --resaltado: #d1ecf1;
             --size-celda: 50px;
         }
 
@@ -17,25 +16,23 @@
             font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: #f4f7f6;
             display: flex; flex-direction: column; align-items: center;
-            padding: 20px; margin: 0; min-height: 100vh;
+            padding: 10px; margin: 0; min-height: 100vh;
             transition: background-color 0.3s;
         }
 
-        /* PANTALLA DE INICIO */
         #pantalla-inicio {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 500;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; text-align: center;
         }
 
-        /* CONTENEDOR PRINCIPAL */
+        /* CONTENEDOR MÁS GRANDE */
         .main-container { 
-            display: flex; flex-direction: row; align-items: flex-start; 
-            gap: 20px; padding: 20px; background: white;
-            border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex; flex-direction: row; align-items: stretch; 
+            gap: 25px; padding: 40px; background: white;
+            border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             transition: background 0.3s;
-            max-width: 95vw;
+            max-width: 98vw;
         }
 
         #sudoku-board {
@@ -47,51 +44,63 @@
             width: var(--size-celda); height: var(--size-celda); 
             background: white; border: var(--borde-normal);
             display: flex; align-items: center; justify-content: center; 
-            font-size: calc(var(--size-celda) * 0.4); 
-            box-sizing: border-box; cursor: pointer;
+            font-size: calc(var(--size-celda) * 0.5); box-sizing: border-box; cursor: pointer;
         }
 
+        /* PANEL NUMÉRICO (2 filas, 5 columnas) */
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 45px);
+            grid-template-rows: repeat(2, 45px);
+            gap: 10px;
+        }
+
+        .num-btn {
+            width: 45px; height: 45px; background: #ecf0f1; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid #ddd;
+        }
+        .num-btn:hover { background: var(--color-maki); color: white; }
+        .num-btn.selected { background: var(--color-maki); color: white; transform: scale(1.1); }
+
+        /* SIDEBAR Y BOTONES PEQUEÑOS */
+        .sidebar { display: flex; flex-direction: column; width: 240px; gap: 20px; align-items: center; }
+        .control-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        
+        .icon-btn { 
+            padding: 10px; width: 45px; height: 45px; font-size: 20px;
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; border: none; cursor: pointer; color: white; transition: 0.3s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        #timer { font-size: 32px; font-weight: bold; margin-bottom: 10px; color: #333; }
+
+        /* ESTADOS */
         .highlight { background-color: #add8e6 !important; color: #000 !important; }
         .dark-mode .highlight { background-color: #2c5d7d !important; color: #fff !important; }
-
         .paused-mode .cell { background-color: #dfe6e9 !important; color: transparent !important; }
         .paused-mode .cell * { visibility: hidden !important; }
-        .dark-mode.paused-mode .cell { background-color: #1a1a1a !important; }
 
         body.dark-mode { background-color: #1a1a1a; color: #ffffff; }
-        .dark-mode #pantalla-inicio { background: #1a1a1a; }
-        .dark-mode .main-container { background: #454545; } 
-        .dark-mode .cell { background: #555; color: #ffffff; border-color: #333; }
-        .dark-mode .fixed { background-color: #666; color: #5dade2; }
-        .dark-mode input { color: #85c1e9; }
+        .dark-mode .main-container { background: #454545; }
+        .dark-mode .cell { background: #555; color: white; border-color: #333; }
+        .dark-mode .num-btn { background: #333; border-color: #444; color: white; }
+        .dark-mode #timer { color: white; }
 
-        @media (max-width: 600px) {
-            :root { --size-celda: 10vw; }
-            .main-container { flex-direction: column; align-items: center; padding: 10px; gap: 15px; }
-            .sidebar { width: 100%; flex-direction: row !important; flex-wrap: wrap; justify-content: center; }
-            #timer { font-size: 24px; width: 100%; }
-            h1 { font-size: 24px; margin-bottom: 10px; }
-            button { padding: 10px; font-size: 14px; }
-        }
-
-        input { 
-            width: 100%; height: 100%; border: none; text-align: center; 
-            font-size: 20px; color: #3498db; outline: none; background: transparent; 
-        }
+        input { width: 100%; height: 100%; border: none; text-align: center; font-size: 22px; color: #3498db; outline: none; background: transparent; }
         .fixed { font-weight: bold; background-color: #f8f9fa; color: #333; }
 
-        .sidebar { display: flex; flex-direction: column; width: 180px; gap: 15px; }
-        #timer { font-size: 42px; font-weight: bold; text-align: center; border: 2px solid #ffcccc; border-radius: 10px; padding: 10px; }
+        @media (max-width: 800px) {
+            .main-container { flex-direction: column; padding: 20px; }
+            .sidebar { width: 100%; }
+        }
 
-        button { padding: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
-
-        /* MODAL DE VICTORIA */
         #modal-victoria {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); z-index: 1000;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(46, 204, 113, 0.9); z-index: 1000;
+            display: none; flex-direction: column; justify-content: center; align-items: center; color: white;
         }
-        .dark-mode #modal-victoria { background: rgba(0,0,0,0.9); }
     </style>
 </head>
 <body>
@@ -99,11 +108,11 @@
     <button id="btn-theme" onclick="toggleTema()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 24px; background: none; border: none; cursor: pointer;">🌙</button>
 
     <div id="pantalla-inicio">
-        <h1 style="color: #2980b9;">SUDOKU DE MAKI</h1>
+        <h1 style="color: var(--color-maki);">SUDOKU DE MAKI</h1>
         <div style="display: flex; gap: 10px;">
-            <button style="background:#2ecc71; color:white;" onclick="seleccionarDificultad(30)">FÁCIL</button>
-            <button style="background:#f1c40f; color:white;" onclick="seleccionarDificultad(45)">MEDIO</button>
-            <button style="background:#e67e22; color:white;" onclick="seleccionarDificultad(55)">DIFÍCIL</button>
+            <button style="background:#2ecc71; color:white; padding:15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;" onclick="seleccionarDificultad(30)">FÁCIL</button>
+            <button style="background:#f1c40f; color:white; padding:15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;" onclick="seleccionarDificultad(45)">MEDIO</button>
+            <button style="background:#e67e22; color:white; padding:15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;" onclick="seleccionarDificultad(55)">DIFÍCIL</button>
         </div>
     </div>
 
@@ -111,22 +120,39 @@
 
     <div class="main-container">
         <div id="sudoku-board">
-            <div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer;">TOCA PARA EMPEZAR</div>
+            <div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center;">TOCA PARA EMPEZAR</div>
         </div>
 
         <div class="sidebar">
             <div id="timer">00:00</div>
-            <button style="background:#27ae60; color:white;" onclick="verificarVictoria()">Verificar</button>
-            <button id="btn-pista" style="background:#9b59b6; color:white;" onclick="usarPista()">Pista</button>
-            <button id="btn-pausa-toggle" style="background:#e74c3c; color:white;" onclick="togglePausa()">Pausar</button>
-            <button onclick="location.reload()" style="background:#95a5a6; color:white;">REINICIAR</button>
+            
+            <div class="number-pad">
+                <div class="num-btn" onclick="seleccionarNumeroPad('1')">1</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('2')">2</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('3')">3</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('4')">4</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('5')">5</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('6')">6</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('7')">7</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('8')">8</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('9')">9</div>
+                <div class="num-btn" onclick="seleccionarNumeroPad('')" title="Borrar">⌫</div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="icon-btn" style="background:#27ae60" onclick="verificarVictoria()" title="Verificar">✅</button>
+                <button class="icon-btn" style="background:#9b59b6" onclick="usarPista()" title="Pista">💡</button>
+                <button id="btn-pausa-toggle" class="icon-btn" style="background:#e74c3c" onclick="togglePausa()" title="Pausar">⏸️</button>
+                <button class="icon-btn" style="background:#f39c12" onclick="deshacerMovimiento()" title="Atrás">↩️</button>
+                <button class="icon-btn" style="background:#95a5a6" onclick="location.reload()" title="Reiniciar">🔄</button>
+            </div>
         </div>
     </div>
 
     <div id="modal-victoria">
-        <h2 style="font-size: 40px; color: #2ecc71;">¡GANASTE!</h2>
-        <p id="msg-victoria"></p> 
-        <button style="background:#2ecc71; color:white;" onclick="location.reload()">Nuevo Juego</button>
+        <h2 style="font-size: 50px;">¡GANASTE MAKI!</h2>
+        <p id="msg-victoria" style="font-size: 24px;"></p> 
+        <button style="background:white; color:#2ecc71; padding:15px 30px; border:none; border-radius:30px; font-weight:bold; cursor:pointer;" onclick="location.reload()">Nuevo Juego</button>
     </div>
 
     <script>
@@ -136,11 +162,11 @@
         let intervaloCronometro;
         let juegoIniciado = false;
         let enPausa = false;
-        let pistasRestantes = 3;
+        let historial = [];
+        let numeroSeleccionado = null;
 
         function toggleTema() {
             document.body.classList.toggle('dark-mode');
-            document.getElementById('btn-theme').innerText = document.body.classList.contains('dark-mode') ? "☀️" : "🌙";
         }
 
         function seleccionarDificultad(n) {
@@ -163,11 +189,18 @@
             }, 1000);
         }
 
+        function seleccionarNumeroPad(num) {
+            numeroSeleccionado = num;
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+            event.target.classList.add('selected');
+            resaltarIguales(num);
+        }
+
         function togglePausa() {
             if (!juegoIniciado) return;
             enPausa = !enPausa;
             document.body.classList.toggle('paused-mode');
-            document.getElementById('btn-pausa-toggle').innerText = enPausa ? "Reanudar" : "Pausar";
+            document.getElementById('btn-pausa-toggle').innerText = enPausa ? "▶️" : "⏸️";
         }
 
         function resaltarIguales(numero) {
@@ -181,7 +214,6 @@
 
         function generarNuevoTablero() {
             const board = document.getElementById('sudoku-board');
-            board.innerHTML = '<div id="overlay-text" onclick="empezarJuego()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer;">TOCA PARA EMPEZAR</div>';
             solucionActual = Array.from({length: 9}, () => Array(9).fill(0));
             
             function esValido(t, f, c, n) {
@@ -213,20 +245,22 @@
                 
                 if(visible[r][c] === 0) {
                     const input = document.createElement('input');
-                    input.type = 'text';
-                    input.id = `i-${r}-${c}`;
-                    input.setAttribute('autocomplete', 'off');
-                    input.oninput = function() {
-                        this.value = this.value.replace(/[^1-9]/g, '').slice(-1);
-                        resaltarIguales(this.value);
-                        verificarAuto();
-                    };
+                    input.type = 'text'; input.id = `i-${r}-${c}`;
+                    input.readOnly = true; // Para usar solo el panel numérico
                     cell.appendChild(input);
                 } else {
                     cell.innerText = visible[r][c];
                     cell.classList.add('fixed');
                 }
+                
                 cell.onclick = () => {
+                    if (enPausa) return;
+                    const input = cell.querySelector('input');
+                    if (input) {
+                        historial.push({id: input.id, valorAnterior: input.value});
+                        input.value = numeroSeleccionado || "";
+                        verificarAuto();
+                    }
                     let v = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input')?.value;
                     resaltarIguales(v);
                 };
@@ -234,55 +268,47 @@
             }
         }
 
-       // LÓGICA DE PISTAS INFINITAS
+        function deshacerMovimiento() {
+            if (historial.length > 0) {
+                let ultimo = historial.pop();
+                document.getElementById(ultimo.id).value = ultimo.valorAnterior;
+            }
+        }
+
         function usarPista() {
             if (!juegoIniciado || enPausa) return;
-            // Busca todos los inputs que estén vacíos o tengan un número incorrecto
             const inputs = Array.from(document.querySelectorAll('input')).filter(i => {
-                let partes = i.id.split('-');
-                let r = partes[1], c = partes[2];
-                return i.value === "" || i.value != solucionActual[r][c];
+                let p = i.id.split('-');
+                return i.value === "" || i.value != solucionActual[p[1]][p[2]];
             });
-
             if (inputs.length > 0) {
-                const iAleatorio = inputs[Math.floor(Math.random() * inputs.length)];
-                let partes = iAleatorio.id.split('-');
-                let r = partes[1], c = partes[2];
-                
-                iAleatorio.value = solucionActual[r][c];
-                iAleatorio.style.color = "#9b59b6"; // Color diferente para la pista
-                resaltarIguales(iAleatorio.value);
+                const rand = inputs[Math.floor(Math.random() * inputs.length)];
+                let p = rand.id.split('-');
+                rand.value = solucionActual[p[1]][p[2]];
+                rand.style.color = "#9b59b6";
                 verificarAuto();
             }
         }
+
         function verificarAuto() {
             let lleno = true, ok = true;
             document.querySelectorAll('input').forEach(i => {
-                let partes = i.id.split('-');
-                let r = partes[1], c = partes[2];
+                let p = i.id.split('-');
                 if (i.value == "") lleno = false;
-                else if (i.value != solucionActual[r][c]) ok = false;
+                else if (i.value != solucionActual[p[1]][p[2]]) ok = false;
             });
-
             if (lleno && ok) {
                 clearInterval(intervaloCronometro);
-                document.getElementById('msg-victoria').innerText = `Tiempo: ${document.getElementById('timer').innerText}`;
+                document.getElementById('msg-victoria').innerText = `Lo lograste en ${document.getElementById('timer').innerText}`;
                 document.getElementById('modal-victoria').style.display = 'flex';
             }
         }
 
         function verificarVictoria() {
-            let win = true;
-            document.querySelectorAll('input').forEach(i => { 
-                let partes = i.id.split('-');
-                let r = partes[1], c = partes[2];
-                if(i.value == "" || i.value != solucionActual[r][c]) win = false; 
-            });
-            if (win) {
-                verificarAuto();
-            } else {
-                alert("Todavía falta o hay errores.");
-            }
+            verificarAuto();
+            let inputs = document.querySelectorAll('input');
+            let vacios = Array.from(inputs).some(i => i.value === "");
+            if (vacios) alert("Maki, aún hay espacios vacíos.");
         }
     </script>
 </body>
