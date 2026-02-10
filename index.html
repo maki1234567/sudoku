@@ -13,7 +13,7 @@
             --size-celda: 50px;
         }
 
-        /* MODO CLARO (POR DEFECTO SIN CLASE) */
+        /* MODO CLARO POR DEFECTO */
         body {
             font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: #f4f7f6; 
@@ -30,6 +30,7 @@
             padding: 20px; text-align: center;
         }
 
+        /* CONTENEDOR MÁS GRANDE */
         .main-container { 
             display: flex; flex-direction: row; align-items: flex-start; 
             gap: 25px; padding: 35px; background: #ffffff;
@@ -38,23 +39,7 @@
             max-width: 98vw;
         }
 
-        .cell {
-            width: var(--size-celda); height: var(--size-celda); 
-            background: #ffffff; border: var(--borde-normal);
-            display: flex; align-items: center; justify-content: center; 
-            font-size: calc(var(--size-celda) * 0.45); 
-            box-sizing: border-box; cursor: pointer; color: #333;
-        }
-        
-        input { 
-            width: 100%; height: 100%; border: none; text-align: center; 
-            font-size: 20px; color: #2980b9; outline: none; background: transparent; 
-        }
-
-        .fixed { font-weight: bold; background-color: #f0f0f0; color: #333; }
-        .highlight { background-color: #add8e6 !important; color: #000 !important; }
-
-        /* --- ESTILOS PARA EL MODO OSCURO (CUANDO TIENE LA CLASE) --- */
+        /* ESTILOS MODO OSCURO */
         body.dark-mode { background-color: #1a1a1a; color: #ffffff; }
         .dark-mode #pantalla-inicio { background: #1a1a1a; }
         .dark-mode .main-container { background: #454545; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
@@ -62,14 +47,23 @@
         .dark-mode .fixed { background-color: #666; color: #5dade2; }
         .dark-mode input { color: #85c1e9; }
         .dark-mode .highlight { background-color: #2c5d7d !important; color: #fff !important; }
-        .dark-mode #modal-victoria { background: rgba(0,0,0,0.9); }
 
-        /* RESTO DE COMPONENTES */
         #sudoku-board {
             display: grid; grid-template-columns: repeat(9, var(--size-celda)); grid-template-rows: repeat(9, var(--size-celda));
             border: var(--borde-grueso); background-color: #000; position: relative;
         }
 
+        .cell {
+            width: var(--size-celda); height: var(--size-celda); 
+            background: #ffffff; border: var(--borde-normal);
+            display: flex; align-items: center; justify-content: center; 
+            font-size: calc(var(--size-celda) * 0.45); 
+            box-sizing: border-box; cursor: pointer;
+        }
+
+        .highlight { background-color: #add8e6 !important; color: #000 !important; }
+
+        /* TABLA DE NÚMEROS */
         .number-pad {
             display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);
             gap: 8px; margin-top: 10px;
@@ -78,13 +72,16 @@
             width: 45px; height: 45px; background: #2980b9; color: white;
             border: none; border-radius: 5px; font-weight: bold; font-size: 20px; cursor: pointer;
         }
-        .num-btn:hover { background: #3498db; }
+        .num-btn:active { background: #1f6391; }
 
         .sidebar { display: flex; flex-direction: column; width: 220px; gap: 10px; align-items: center; }
         .control-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
         .icon-btn { padding: 8px; font-size: 18px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; border: none; }
 
         #timer { font-size: 36px; font-weight: bold; text-align: center; border: 2px solid #5dade2; border-radius: 10px; padding: 5px 15px; margin-bottom: 10px; color: #5dade2; }
+
+        input { width: 100%; height: 100%; border: none; text-align: center; font-size: 20px; color: #2980b9; outline: none; background: transparent; }
+        .fixed { font-weight: bold; background-color: #f0f0f0; color: #333; }
 
         .paused-mode .cell { background-color: #777 !important; color: transparent !important; }
         .paused-mode .cell * { visibility: hidden !important; }
@@ -98,12 +95,14 @@
 
         #modal-victoria {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); z-index: 1000;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: none; flex-direction: column; justify-content: center; align-items: center; color: white;
         }
     </style>
 </head>
-<body class="dark-mode"> <button id="btn-theme" onclick="toggleTema()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 24px; background: none; border: none; cursor: pointer;">☀️</button>
+<body class="dark-mode">
+
+    <button id="btn-theme" onclick="toggleTema()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; font-size: 24px; background: none; border: none; cursor: pointer;">☀️</button>
 
     <div id="pantalla-inicio">
         <h1 style="color: #2980b9;">SUDOKU DE MAKI</h1>
@@ -124,7 +123,7 @@
         <div class="sidebar">
             <div id="timer">00:00</div>
             
-            <div class="number-pad"></div>
+            <div class="number-pad" id="num-pad-container"></div>
 
             <div class="control-buttons">
                 <button class="icon-btn" style="background:#27ae60; color:white;" onclick="verificarVictoria()" title="Verificar">✅</button>
@@ -152,13 +151,16 @@
         let celdaSeleccionada = null;
         let historial = [];
 
-        // GENERAR TECLADO NUMÉRICO
-        const numPad = document.querySelector('.number-pad');
+        // GENERAR TECLADO Y LOGICA DE RESALTADO AL CLICAR NÚMERO
+        const numPad = document.getElementById('num-pad-container');
         for (let i = 1; i <= 9; i++) {
             const btn = document.createElement('button');
             btn.className = 'num-btn';
             btn.innerText = i;
-            btn.onclick = () => escribirNumero(i.toString());
+            btn.onclick = () => {
+                resaltarIguales(i.toString()); // <-- Resalta los iguales al tocar el botón
+                escribirNumero(i.toString());
+            };
             numPad.appendChild(btn);
         }
         const btnBorrar = document.createElement('button');
@@ -204,7 +206,7 @@
             if (!numero || enPausa) return;
             document.querySelectorAll('.cell').forEach(cell => {
                 let valor = cell.classList.contains('fixed') ? cell.innerText : cell.querySelector('input')?.value;
-                if (valor === numero) cell.classList.add('highlight');
+                if (valor == numero) cell.classList.add('highlight');
             });
         }
 
@@ -214,7 +216,6 @@
             if (input) {
                 historial.push({input: input, valorAnterior: input.value});
                 input.value = num;
-                resaltarIguales(num);
                 verificarAuto();
             }
         }
